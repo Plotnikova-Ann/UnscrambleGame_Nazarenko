@@ -18,14 +18,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -62,8 +58,12 @@ fun GameScreen(
 
         GameLayout(
             currentScrambledWord = gameUiState.currentScrambledWord,
-            onUserGuessChanged = { },
-            onKeyboardDone = { }
+            userGuess = gameViewModel.userGuess,
+            onUserGuessChanged = { gameViewModel.updateUserGuess(it) },
+            onKeyboardDone = { gameViewModel.checkUserGuess() },
+            isGuessWrong = gameUiState.isGuessedWordWrong,
+            onSubmitClicked = { gameViewModel.checkUserGuess() },
+            onSkipClicked = { gameViewModel.skipWord() }
         )
     }
 }
@@ -101,12 +101,14 @@ fun GameStatus(
 @Composable
 fun GameLayout(
     currentScrambledWord: String,
+    userGuess: String,
     onUserGuessChanged: (String) -> Unit,
     onKeyboardDone: () -> Unit,
+    isGuessWrong: Boolean,
+    onSubmitClicked: () -> Unit,
+    onSkipClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var userGuess by remember { mutableStateOf("") }
-
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -125,7 +127,7 @@ fun GameLayout(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = currentScrambledWord,
+                    text = currentScrambledWord.uppercase(),
                     style = MaterialTheme.typography.displayMedium,
                     fontSize = 45.sp
                 )
@@ -139,13 +141,11 @@ fun GameLayout(
 
         OutlinedTextField(
             value = userGuess,
-            onValueChange = {
-                userGuess = it
-                onUserGuessChanged(it)
-            },
+            onValueChange = { onUserGuessChanged(it) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Введите слово") },
+            isError = isGuessWrong,
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Done
             ),
@@ -154,8 +154,16 @@ fun GameLayout(
             )
         )
 
+        if (isGuessWrong) {
+            Text(
+                text = "Неправильно! Попробуйте ещё раз",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
         Button(
-            onClick = {  },
+            onClick = onSubmitClicked,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
@@ -165,7 +173,7 @@ fun GameLayout(
         }
 
         OutlinedButton(
-            onClick = {  },
+            onClick = onSkipClicked,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
