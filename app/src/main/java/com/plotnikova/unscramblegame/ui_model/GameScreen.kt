@@ -1,5 +1,6 @@
 package com.plotnikova.unscramblegame.ui_model
 
+import androidx.benchmark.traceprocessor.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -19,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,6 +67,13 @@ fun GameScreen(
             isGuessWrong = gameUiState.isGuessedWordWrong,
             onSubmitClicked = { gameViewModel.checkUserGuess() },
             onSkipClicked = { gameViewModel.skipWord() }
+        )
+    }
+
+    if (gameUiState.isGameOver) {
+        FinalScoreDialog(
+            score = gameUiState.score,
+            onPlayAgain = { gameViewModel.resetGame() }
         )
     }
 }
@@ -182,4 +192,34 @@ fun GameLayout(
             )
         }
     }
+}
+
+@Composable
+fun FinalScoreDialog(
+    score: Int,
+    onPlayAgain: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AlertDialog(
+        onDismissRequest = {
+            // Пустой блок – диалог можно закрыть только кнопкой
+        },
+        title = { Text(text = "Поздравляем!") },
+        text = {
+            Column {
+                Text(text = "Вы набрали:")
+                Text(
+                    text = "$score очков",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontSize = 36.sp
+                )
+            }
+        },
+        modifier = modifier,
+        confirmButton = {
+            TextButton(onClick = onPlayAgain) {
+                Text(text = "Играть снова")
+            }
+        }
+    )
 }
